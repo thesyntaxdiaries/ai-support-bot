@@ -1,0 +1,29 @@
+ 
+{
+    "products": [
+      {
+        "id": "P001",
+        "name": "Classic T-Shirt",
+        "description": "Comfortable cotton t-shirt",
+        "price": 29.99,
+        "variants": [
+          {
+            "color": "blue",
+            "sizes": ["S", "M", "L", "XL"],
+            "stock": 100
+          },
+          {
+            "color": "red",
+            "sizes": ["S", "M", "L"],
+            "stock": 75
+          },
+          {
+            "color": "black",
+            "sizes": ["M", "L", "XL"],
+            "stock": 150
+          }
+        ]
+      }
+    ],
+    "conversations": []
+  }

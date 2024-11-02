@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Support Assistant</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .chat-container {
+            height: calc(100vh - 200px);
+        }
+        .message-container {
+            max-height: calc(100vh - 300px);
+        }
+        .typing-indicator span {
+            animation: blink 1.4s infinite both;
+        }
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes blink {
+            0% { opacity: 0.1; }
+            20% { opacity: 1; }
+            100% { opacity: 0.1; }
+        }
+        .message {
+            max-width: 80%;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">AI Support Assistant</h1>
+            <p class="text-gray-600 mt-2">24/7 Customer Support powered by AI</p>
+        </div>
+
+        <!-- Main Chat Interface -->
+        <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden chat-container">
+            <!-- Chat Header -->
+            <div class="bg-blue-600 text-white p-4 flex items-center justify-between">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center">
+                        <i class="fas fa-robot text-blue-600 text-xl"></i>
+                    </div>
+                    <div class="ml-3">
+                        <h2 class="font-semibold">Support Bot</h2>
+                        <div class="text-sm text-blue-100">
+                            <span class="inline-block w-2 h-2 bg-green-400 rounded-full"></span>
+                            <span class="ml-1">Online</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <button class="text-white hover:text-blue-100 transition" title="Clear Chat" onclick="clearChat()">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Chat Messages -->
+            <div class="p-4 message-container overflow-y-auto" id="messageContainer">
+                <!-- Welcome Message -->
+                <div class="flex items-start mb-4">
+                    <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-robot text-white text-sm"></i>
+                    </div>
+                    <div class="ml-3 bg-gray-100 rounded-lg py-2 px-4 message">
+                        <p class="text-gray-800">Hello! I'm your AI support assistant. How can I help you today?</p>
+                        <span class="text-xs text-gray-500 mt-1 block">Just now</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Typing Indicator -->
+            <div id="typingIndicator" class="hidden px-4 py-2">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                        <i class="fas fa-robot text-white text-sm"></i>
+                    </div>
+                    <div class="typing-indicator bg-gray-100 rounded-full py-2 px-4">
+                        <span class="inline-block w-2 h-2 bg-gray-500 rounded-full"></span>
+                        <span class="inline-block w-2 h-2 bg-gray-500 rounded-full"></span>
+                        <span class="inline-block w-2 h-2 bg-gray-500 rounded-full"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input Area -->
+            <div class="border-t p-4">
+                <form onsubmit="sendMessage(event)" class="flex space-x-3">
+                    <input 
+                        type="text" 
+                        id="messageInput"
+                        class="flex-1 border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Type your message..."
+                    >
+                    <button 
+                        type="submit"
+                        class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition flex items-center"
+                    >
+                        <i class="fas fa-paper-plane mr-2"></i>
+                        Send
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Sample Queries -->
+        <div class="max-w-4xl mx-auto mt-8">
+            <h3 class="text-gray-700 font-semibold mb-3">Try these sample queries:</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <button onclick="useQuery(this)" class="text-left bg-white p-3 rounded-lg shadow-sm hover:shadow transition">
+                    "Do you have the Classic T-Shirt in blue?"
+                </button>
+                <button onclick="useQuery(this)" class="text-left bg-white p-3 rounded-lg shadow-sm hover:shadow transition">
+                    "What's your return policy?"
+                </button>
+                <button onclick="useQuery(this)" class="text-left bg-white p-3 rounded-lg shadow-sm hover:shadow transition">
+                    "Tell me about the Denim Jeans sizes"
+                </button>
+                <button onclick="useQuery(this)" class="text-left bg-white p-3 rounded-lg shadow-sm hover:shadow transition">
+                    "I need help with my order"
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const userId = 'user_' + Math.random().toString(36).substring(7);
+        
+        async function sendMessage(event) {
+            event.preventDefault();
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            if (!message) return;
+
+            // Add user message
+            addMessage(message, 'user');
+            input.value = '';
+
+            // Show typing indicator
+            document.getElementById('typingIndicator').classList.remove('hidden');
+
+            try {
+                const response = await fetch('http://localhost:3000/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message,
+                        userId
+                    })
+                });
+
+                const data = await response.json();
+                
+                // Hide typing indicator
+                document.getElementById('typingIndicator').classList.add('hidden');
+
+                // Add bot response
+                if (data.response) {
+                    addMessage(data.response, 'bot');
+                } else {
+                    addMessage('Sorry, I encountered an error. Please try again.', 'bot');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('typingIndicator').classList.add('hidden');
+                addMessage('Sorry, I encountered an error. Please try again.', 'bot');
+            }
+        }
+
+        function addMessage(text, type) {
+            const container = document.getElementById('messageContainer');
+            const div = document.createElement('div');
+            div.className = `flex items-start mb-4 ${type === 'user' ? 'justify-end' : ''}`;
+            
+            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
+            if (type === 'user') {
+                div.innerHTML = `
+                    <div class="mr-3 bg-blue-600 text-white rounded-lg py-2 px-4 message">
+                        <p>${text}</p>
+                        <span class="text-xs text-blue-100 mt-1 block">${time}</span>
+                    </div>
+                    <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-user text-white text-sm"></i>
+                    </div>
+                `;
+            } else {
+                div.innerHTML = `
+                    <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-robot text-white text-sm"></i>
+                    </div>
+                    <div class="ml-3 bg-gray-100 rounded-lg py-2 px-4 message">
+                        <p class="text-gray-800">${text}</p>
+                        <span class="text-xs text-gray-500 mt-1 block">${time}</span>
+                    </div>
+                `;
+            }
+
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function useQuery(button) {
+            const input = document.getElementById('messageInput');
+            input.value = button.textContent.trim().replace(/["]/g, '');
+            input.focus();
+        }
+
+        function clearChat() {
+            const container = document.getElementById('messageContainer');
+            container.innerHTML = `
+                <div class="flex items-start mb-4">
+                    <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-robot text-white text-sm"></i>
+                    </div>
+                    <div class="ml-3 bg-gray-100 rounded-lg py-2 px-4 message">
+                        <p class="text-gray-800">Hello! I'm your AI support assistant. How can I help you today?</p>
+                        <span class="text-xs text-gray-500 mt-1 block">Just now</span>
+                    </div>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
